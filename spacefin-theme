@@ -12,11 +12,8 @@ CONFIG_DIR = os.path.expanduser("~/.config/cosmic/")
 THEMES = ["Spacefin", "Cosmic"]
 
 
-def show_help():
+def list_themes():
     """Prints the help message."""
-    script_name = os.path.basename(sys.argv[0])
-    print(f"Error: You must provide a theme name.")
-    print(f"Usage: {script_name} <theme_name>")
     print("\nAvailable themes:")
     for theme in THEMES:
         print(f"  - {theme}")
@@ -25,7 +22,9 @@ def show_help():
 def main():
     # Check if theme name was provided
     if len(sys.argv) != 2:
-        show_help()
+        print(f"Error: You must provide a theme name.")
+        print(f"Usage: spacefin-theme <theme_name>")
+        list_themes()
         sys.exit(1)
 
     theme_name = sys.argv[1]
@@ -33,7 +32,9 @@ def main():
     # Check if provided theme name is in THEMES
     if theme_name not in THEMES:
         print(f"⚠️ Warning: '{theme_name}' is not in the known list of themes.")
-        print("Continuing anyway, but it might not exist in the repository.")
+        print("Please check the name and try again.")
+        list_themes()
+        sys.exit(1)
 
     print(f"🔄 Attempting to set theme: {theme_name}")
 
@@ -67,8 +68,7 @@ def main():
         # Check if the provided theme exists in the repository
         if not os.path.isdir(source_dir):
             print(f"❌ ERROR: Theme '{theme_name}' not found in the repository.")
-            print("Please check the name and try again.")
-            show_help()  # Show available themes
+            print("Please file an issue in our Github repo.")
             sys.exit(1)
 
         os.makedirs(dest_dir, exist_ok=True)
