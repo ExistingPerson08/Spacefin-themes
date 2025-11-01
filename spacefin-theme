@@ -5,77 +5,104 @@ import tempfile
 import shutil
 import os
 
-# --- Konfigurace ---
+# Configuration
 REPO_URL = "https://github.com/ExistingPerson08/Spacefin-themes.git"
-# Název složky, která vznikne po naklonování repozitáře
 REPO_FOLDER_NAME = "Spacefin-themes"
-# Cílový adresář pro konfiguraci
 CONFIG_DIR = os.path.expanduser("~/.config/cosmic/")
-# --------------------
+THEMES = ["Spacefin", "Cosmic"]
+
+
+def show_help():
+    """Prints the help message."""
+    script_name = os.path.basename(sys.argv[0])
+    print(f"Error: You must provide a theme name.")
+    print(f"Usage: {script_name} <theme_name>")
+    print("\nAvailable themes:")
+    for theme in THEMES:
+        print(f"  - {theme}")
 
 
 def main():
-    # 1. Kontrola, zda byl zadán argument (název tématu)
+    # Check if theme name was provided
     if len(sys.argv) != 2:
-        print(f"Chyba: Musíš zadat název tématu (složky).")
-        print(f"Použití: python3 {sys.argv[0]} <název_tématu>")
-        sys.exit(1)  # Ukončí skript s chybovým kódem
+        show_help()
+        sys.exit(1)
 
     theme_name = sys.argv[1]
-    print(f"🔄 Pokouším se nastavit téma: {theme_name}")
 
-    # 2. Vytvoření dočasného adresáře
-    # Použití 'with' zajistí, že se adresář automaticky smaže po dokončení
+    # Check if provided theme name is in THEMES
+    if theme_name not in THEMES:
+        print(f"⚠️ Warning: '{theme_name}' is not in the known list of themes.")
+        print("Continuing anyway, but it might not exist in the repository.")
+
+    print(f"🔄 Attempting to set theme: {theme_name}")
+
+    # Create temporary directory
     with tempfile.TemporaryDirectory() as temp_dir:
         clone_path = os.path.join(temp_dir, REPO_FOLDER_NAME)
-        print(f"🌍 Klonuji repozitář z {REPO_URL}...")
+        print(f"🌍 Cloning repository from {REPO_URL}...")
 
-        # 3. Klonování repozitáře pomocí 'git'
+        # Clone repository using git
         try:
-            # --depth 1 stáhne pouze poslední verzi, je to mnohem rychlejší
             subprocess.run(
                 ["git", "clone", "--depth", "1", REPO_URL, clone_path],
-                check=True,  # Pokud git selže, vyvolá chybu
-                capture_output=True,  # Zachytí výstup, aby se nezobrazoval
+                check=True,  # If git fails, raise an error
+                capture_output=True,  # Capture output to hide it
                 text=True,
             )
-            print("✅ Repozitář úspěšně naklonován.")
         except FileNotFoundError:
             print(
-                f"❌ CHYBA: Program 'git' nebyl nalezen. Ujisti se, že je nainstalován."
+                f"❌ ERROR: 'git' command not found. Please make sure git is installed."
             )
             sys.exit(1)
         except subprocess.CalledProcessError as e:
-            print(f"❌ CHYBA: Selhalo klonování repozitáře.")
-            print(e.stderr)  # Vypsání chyby z gitu
+            print(f"❌ ERROR: Failed to clone repository.")
+            print(e.stderr)  # Print the error from git
             sys.exit(1)
 
-        # 4. Definování cest
-        # Zdroj: Složka s tématem uvnitř naklonovaného repozitáře
+        # Define paths
         source_dir = os.path.join(clone_path, theme_name)
-
-        # Cíl: Tvůj lokální konfigurační adresář
         dest_dir = CONFIG_DIR
 
-        # 5. Kontrola, zda zadané téma (složka) v repozitáři existuje
+        # Check if the provided theme exists in the repository
         if not os.path.isdir(source_dir):
-            print(f"❌ CHYBA: Téma '{theme_name}' nebylo nalezeno v repozitáři.")
-            print("Zkontroluj název a zkus to znovu.")
+            print(f"❌ ERROR: Theme '{theme_name}' not found in the repository.")
+            print("Please check the name and try again.")
+            show_help()  # Show available themes
             sys.exit(1)
 
-        # 6. Zajištění existence cílového adresáře
         os.makedirs(dest_dir, exist_ok=True)
 
-        print(f"📂 Kopíruji soubory z '{theme_name}' do '{dest_dir}'...")
+        # Copy files
+        print(f"📂 Copying files from '{theme_name}' to '{dest_dir}'...")
         try:
             shutil.copytree(source_dir, dest_dir, dirs_exist_ok=True)
-            print(f"🎉 Hotovo! Téma '{theme_name}' bylo úspěšně nastaveno.")
+            print(f"🎉 Done! Theme '{theme_name}' has been successfully applied.")
+
+            try:
+                subprocess.run(
+                    ["killall", "cosmic-panel"],
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                )
+            except FileNotFoundError:
+                print(
+                    f"⚠️ Warning: 'killall' command not found. Could not restart cosmic-panel."
+                )
+            except subprocess.CalledProcessError as e:
+                print(
+                    f"Error while restarting Cosmic, please log out and log in to prevent issues."
+                )
+                if e.stderr:
+                    print(f"   Details: {e.stderr.strip()}")
+
         except TypeError:
-            print("❌ CHYBA: Tvá verze Pythonu je příliš stará.")
-            print("Tento skript vyžaduje Python 3.8 nebo novější.")
+            print("❌ ERROR: Your Python version is too old.")
+            print("This script requires Python 3.8 or newer.")
             sys.exit(1)
         except Exception as e:
-            print(f"❌ CHYBA: Selhalo kopírování souborů.")
+            print(f"❌ ERROR: Failed to copy files.")
             print(e)
             sys.exit(1)
 
