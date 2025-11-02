@@ -112,6 +112,33 @@ def list_available(path, item_type):
         print(f"   (Error listing {item_type}: {e})")
 
 
+def list_available_scripts(path):
+    """Lists available scripts"""
+    print(f"\nAvailable scripts:")
+    if not os.path.isdir(path):
+        print(f"   (Could not find 'run' directory in repository)")
+        return
+    try:
+        scripts = []
+        for item in os.listdir(path):
+            item_path = os.path.join(path, item)
+            # Check if it is a file, ends with .sh, and not hidden
+            if (
+                os.path.isfile(item_path)
+                and item.endswith(".sh")
+                and not item.startswith(".")
+            ):
+                scripts.append(item[:-3])  # Remove .sh
+
+        if not scripts:
+            print(f"   (No scripts found)")
+        else:
+            for script in sorted(scripts):
+                print(f"  - {script}")
+    except OSError as e:
+        print(f"   (Error listing scripts: {e})")
+
+
 def copy(source, dest, ignore_patterns=None):
     """Wrapper for shutil.copytree with dirs_exist_ok and error handling."""
     print(f"📂 Copying files from '{os.path.basename(source)}' to '{dest}'...")
@@ -242,6 +269,29 @@ def handle_language(lang_name, clone_path):
     print(f"🎉 Done! Language '{lang_name}' environment setup complete.")
 
 
+def handle_run(script_name, clone_path):
+    """Handles the execution of a script."""
+    print(f"🔄 Running script: {script_name}")
+    run_dir = os.path.join(clone_path, "run")
+    script_path = os.path.join(run_dir, f"{script_name}.sh")
+
+    if not os.path.isfile(script_path):
+        print(f"❌ ERROR: Script '{script_name}.sh' not found in repository 'run' folder.")
+        list_available_scripts(run_dir)
+        sys.exit(1)
+
+    try:
+        # Make the script executable
+        os.chmod(script_path, 0o755)
+    except Exception as e:
+        print(f"❌ ERROR: Failed to make script executable: {e}")
+        sys.exit(1)
+
+    # Run the script using bash
+    run_command(["bash", script_path])
+    print(f"🎉 Done! Script '{script_name}' executed.")
+
+
 # main()
 
 
@@ -284,6 +334,16 @@ def main():
         "name", help="Name of the language to set up (e.g., 'python')."
     )
 
+    # 'run' subcommand
+    run_parser = subparsers.add_parser(
+        "run",
+        help="Run a script from the repository.",
+        description="Run a .sh script from the 'run' folder in the repository.",
+    )
+    run_parser.add_argument(
+        "name", help="Name of the script to run (without .sh extension)."
+    )
+
     # Handle case where no arguments are given
     if len(sys.argv) == 1:
         parser.print_help(sys.stderr)
@@ -308,6 +368,8 @@ def main():
                 handle_theme(args.name, clone_path)
             elif args.command == "language":
                 handle_language(args.name, clone_path)
+            elif args.command == "run":
+                handle_run(args.name, clone_path)
 
         except Exception as e:
             print(f"❌ An unexpected critical error occurred: {e}")
