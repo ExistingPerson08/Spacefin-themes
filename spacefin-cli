@@ -9,7 +9,7 @@ import json
 import shlex
 
 # Config
-DEFAULT_REPO_URL = "https://github.com/ExistingPerson08/Spacefin-themes.git"
+DEFAULT_REPO_URL = "https://github.com/ExistingPerson08/Spacefin-cli.git"
 REPO_FOLDER_NAME = "spacefin-assets"
 HOME_DIR = os.path.expanduser("~")
 
