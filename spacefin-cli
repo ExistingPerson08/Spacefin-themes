@@ -16,11 +16,11 @@ HOME_DIR = os.path.expanduser("~")
 
 def confirm_user_repo(repo_url):
     """Confirm user repository."""
-    print(f"⚠️  WARNING: You are about to use a custom repository:")
-    print(f"   {repo_url}")
-    print("   This could be insecure. Only proceed if you trust the source.")
+    print(f"⚠️  WARNING: You are about to use a custom repository:")
+    print(f"   {repo_url}")
+    print("   This could be insecure. Only proceed if you trust the source.")
     try:
-        choice = input("   Do you want to continue? [y/N]: ").strip().lower()
+        choice = input("   Do you want to continue? [y/N]: ").strip().lower()
     except EOFError:
         choice = "n"
 
@@ -49,7 +49,7 @@ def clone_repo(repo_url, temp_dir):
     except subprocess.CalledProcessError as e:
         print(f"❌ ERROR: Failed to clone repository.")
         if e.stderr:
-            print(f"   Details: {e.stderr.strip()}")
+            print(f"   Details: {e.stderr.strip()}")
         sys.exit(1)
     except Exception as e:
         print(f"❌ ERROR: An unexpected error occurred during cloning: {e}")
@@ -72,9 +72,9 @@ def run_command(command_args):
         ) as proc:
             if proc.stdout:
                 for line in proc.stdout:
-                    print(f"   > {line.strip()}", flush=True)
+                    print(f"   > {line.strip()}", flush=True)
 
-            proc.wait()  # Wait for the process to complete
+            proc.wait()  # Wait for the process to complete
 
             if proc.returncode != 0:
                 print(f"❌ ERROR: Command failed with exit code {proc.returncode}")
@@ -92,7 +92,7 @@ def list_available(path, item_type):
     """Lists available items (themes/languages)"""
     print(f"\nAvailable {item_type}:")
     if not os.path.isdir(path):
-        print(f"   (Could not find '{item_type}' directory in repository)")
+        print(f"   (Could not find '{item_type}' directory in repository)")
         return
     try:
         items = []
@@ -103,19 +103,19 @@ def list_available(path, item_type):
                 items.append(item)
 
         if not items:
-            print(f"   (No {item_type} found)")
+            print(f"   (No {item_type} found)")
         else:
             for item in sorted(items):
-                print(f"  - {item}")
+                print(f"  - {item}")
     except OSError as e:
-        print(f"   (Error listing {item_type}: {e})")
+        print(f"   (Error listing {item_type}: {e})")
 
 
 def list_available_scripts(path):
     """Lists available scripts"""
     print(f"\nAvailable commands:")
     if not os.path.isdir(path):
-        print(f"   (Could not find 'run' directory in repository)")
+        print(f"   (Could not find 'run' directory in repository)")
         return
     try:
         scripts = []
@@ -127,21 +127,21 @@ def list_available_scripts(path):
                 and item.endswith(".sh")
                 and not item.startswith(".")
             ):
-                scripts.append(item[:-3])  # Remove .sh
+                scripts.append(item[:-3])  # Remove .sh
 
         if not scripts:
-            print(f"   (No commands found)")
+            print(f"   (No commands found)")
         else:
             for script in sorted(scripts):
-                print(f"  - {script}")
+                print(f"  - {script}")
     except OSError as e:
-        print(f"   (Error listing commands: {e})")
+        print(f"   (Error listing commands: {e})")
 
 def list_available_bundles(path):
     """Lists available install bundles"""
     print(f"\nAvailable bundles:")
     if not os.path.isdir(path):
-        print(f"   (Could not find 'install' directory in repository)")
+        print(f"   (Could not find 'install' directory in repository)")
         return
     try:
         bundles = []
@@ -153,15 +153,15 @@ def list_available_bundles(path):
                 and item.endswith(".json")
                 and not item.startswith(".")
             ):
-                bundles.append(item[:-5])  # Remove .json
+                bundles.append(item[:-5])  # Remove .json
 
         if not bundles:
-            print(f"   (No bundles found)")
+            print(f"   (No bundles found)")
         else:
             for bundle in sorted(bundles):
-                print(f"  - {bundle}")
+                print(f"  - {bundle}")
     except OSError as e:
-        print(f"   (Error listing bundles: {e})")
+        print(f"   (Error listing bundles: {e})")
 
 def copy(source, dest, ignore_patterns=None):
     """Wrapper for shutil.copytree with dirs_exist_ok and error handling."""
@@ -170,7 +170,7 @@ def copy(source, dest, ignore_patterns=None):
         shutil.copytree(source, dest, dirs_exist_ok=True, ignore=ignore_patterns)
     except TypeError:
         # Fallback for Python < 3.8 which lacks dirs_exist_ok
-        print("⚠️  WARNING: Your Python version is older (pre-3.8).")
+        print("⚠️  WARNING: Your Python version is older (pre-3.8).")
         print("    Falling back to less robust copy method.")
         try:
             from distutils.dir_util import copy_tree
@@ -180,14 +180,14 @@ def copy(source, dest, ignore_patterns=None):
             print(
                 "❌ ERROR: 'distutils' not found. Cannot copy files on this Python version."
             )
-            print("   Please upgrade to Python 3.8 or newer.")
+            print("   Please upgrade to Python 3.8 or newer.")
             sys.exit(1)
         except Exception as e:
             print(f"❌ ERROR: Failed to copy files with distutils fallback: {e}")
             sys.exit(1)
     except Exception as e:
         print(f"❌ ERROR: Failed to copy files.")
-        print(f"   Details: {e}")
+        print(f"   Details: {e}")
         sys.exit(1)
 
 
@@ -262,19 +262,19 @@ def handle_language(lang_name, clone_path):
                 for cmd_str in commands_list:
                     if not isinstance(cmd_str, str):
                         print(
-                            f"⚠️  WARNING: Skipping non-string command in 'commands.json': {cmd_str}"
+                            f"⚠️  WARNING: Skipping non-string command in 'commands.json': {cmd_str}"
                         )
                         continue
                     try:
                         # Split command string into arguments
                         cmd_args = shlex.split(cmd_str)
-                        if cmd_args:  # Ensure not an empty string
+                        if cmd_args:  # Ensure not an empty string
                             run_command(cmd_args)
                     except ValueError as e:
                         print(
                             f"❌ ERROR: Badly formatted command in 'commands.json': {cmd_str}"
                         )
-                        print(f"   Details: {e}")
+                        print(f"   Details: {e}")
                         sys.exit(1)
 
         except json.JSONDecodeError:
@@ -443,7 +443,7 @@ def main():
                 handle_language(args.name, clone_path)
             elif args.command == "run":
                 handle_run(args.name, clone_path)
-  V         elif args.command == "install":
+  V         elif args.command == "install":
                 handle_install(args.name, clone_path)
 
         except Exception as e:
